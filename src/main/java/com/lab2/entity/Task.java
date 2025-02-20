@@ -20,10 +20,10 @@ import lombok.Data;
                         "WHERE t_p_id=:projectId, t_id=:taskId;"),
 
     @NamedNativeQuery(name = "Task.deleteCompleted",
-    query = "DELETE FROM task WHERE t_p_id=:projectId AND t_is_completed=true"),
+    query = "DELETE FROM task WHERE t_p_id=:projectId AND t_completed=true"),
 
     @NamedNativeQuery(name = "Task.deleteAllByProjectId",
-    query = "DELETE FROM task WHERE t_p_id = :projectId")
+    query = "DELETE FROM task WHERE t_p_id=:projectId")
 })
 @Data
 public class Task {

@@ -66,8 +66,8 @@ public class TaskController {
 
     // 6) Удаляет все задачи проекта, у которых completed = true.
     @DeleteMapping
-    public void deleteAllCompleted() {
-        
+    public void deleteAllCompleted(@PathVariable int projectId) {
+        taskService.deleteCompleted(projectId);
     }
     
 }

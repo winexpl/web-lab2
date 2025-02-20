@@ -10,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 
 import com.lab2.entity.Task;
 
+import jakarta.transaction.Transactional;
+
 public interface JpaTaskRepository extends JpaRepository<Task, Integer> {
     List<Task> findByProjectId(int projectId);
 
@@ -21,6 +23,8 @@ public interface JpaTaskRepository extends JpaRepository<Task, Integer> {
 
     Optional<Task> findByIdAndProjectId(int id, int projectId);
 
+    @Modifying
+    @Transactional
     @Query(nativeQuery = true, name = "Task.deleteCompleted")
-    int deleteCompleted(@Param("projectId") int projectId);
+    void deleteCompleted(@Param("projectId") int projectId);
 }

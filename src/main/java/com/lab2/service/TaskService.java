@@ -49,6 +49,10 @@ public class TaskService {
         } else return null;
     }
 
+    public void deleteCompleted(int projectId) {
+        taskRepository.deleteCompleted(projectId);
+    }
+
     private TaskDTO convertToDTO(Task task) {
         return TaskDTO.builder()
             .id(task.getId())
