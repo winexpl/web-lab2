@@ -7,18 +7,27 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.lab2.dto.ActiveTasksCount;
+import com.lab2.dto.ProjectDTO;
 import com.lab2.entity.Project;
 import com.lab2.service.ProjectService;
 
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 import org.springframework.web.bind.annotation.PutMapping;
 
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,54 +42,63 @@ public class ProjectController {
     
     private ProjectService projectService;
 
-    @PostMapping
-    ResponseEntity<Project> save(@RequestBody Project project) {
-        Project savedProject = projectService.saveProject(project);
-
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(savedProject.getId())
-                .toUri();
-
-        return ResponseEntity.created(location).body(savedProject);
+    // 1) Возвращает все проекты, если search не передан.
+    @GetMapping
+    public List<ProjectDTO> findByString(@RequestParam @Nullable String search) {
+        if(search ==  null) return projectService.findAll();
+        else return projectService.findByString(search);
     }
 
+    // 2) Возвращает конкретный проект по id.
+    @GetMapping("/{id}")
+    public ResponseEntity<ProjectDTO> findById(@PathVariable int id) {
+        return ResponseEntity.ofNullable(projectService.findProjectById(id));
+    }
+    
+    // 3) Создаёт новый проект (без задач).
+    @PostMapping
+    ResponseEntity<ProjectDTO> save(@RequestBody Project project) {
+        try {
+            ProjectDTO savedProject = projectService.saveProject(project);
+
+            URI location = ServletUriComponentsBuilder
+                    .fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(savedProject.getId())
+                    .toUri();
+
+            return ResponseEntity.created(location).body(savedProject);
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    // 4) Обновляет проект.
     @PutMapping("/{id}")
     public ResponseEntity<Integer> update(@PathVariable int id, @RequestBody Project project) {
         project.setId(id);
-        int numberOfRowsAffected = projectService.updateProject(project);
-        if (numberOfRowsAffected == 0) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(0);
-        } else {
-            return ResponseEntity.ok(numberOfRowsAffected);
+        try {
+            int numberOfRowsAffected = projectService.updateProject(project);
+            if (numberOfRowsAffected == 0) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(0);
+            } else {
+                return ResponseEntity.ok(numberOfRowsAffected);
+            }
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.badRequest().body(0);
         }
     }
 
+    // 5) Удаляет проект.
     @DeleteMapping("/{id}")
-    public ResponseEntity<Integer> remove(@PathVariable int id) {
-        int numberOfRowsAffected = projectService.removeProject(id);
-        if (numberOfRowsAffected == 0) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(0);
-        } else {
-            return ResponseEntity.ok(numberOfRowsAffected);
-        }
+    public ResponseEntity<Void> remove(@PathVariable int id) {
+        projectService.removeProject(id);
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Project> findById(@PathVariable int id) {
-        Project project = projectService.findProjectById(id);
-        return ResponseEntity.ofNullable(project);
+    // 6) Получение количества незавершённых задач в проектах
+    @GetMapping("/active")
+    public Map<Integer, Integer> getActiveTasksCountByProject() {
+        return projectService.getActiveTasksCountByProject();
     }
-
-    @GetMapping
-    List<Project> findByRangeOfDates(@RequestParam LocalDate start_date, @RequestParam LocalDate end_date) {
-        return projectService.findProjectByRangeOfDates(start_date, end_date);
-    }
-
-    @GetMapping("/all")
-    public List<Project> findAll() {
-        return projectService.findAllProject();
-    }
-    
 }
