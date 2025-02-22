@@ -25,12 +25,14 @@ public class ProjectService {
     @Autowired
     private JpaTaskRepository taskRepository;
 
-    public ProjectDTO saveProject(Project project) {
+    public ProjectDTO saveProject(ProjectDTO projectDTO) {
+        Project project = convertToEntity(projectDTO);
         if(project.getBeginDate() == null) project.setBeginDate(LocalDate.now());
         return convertToDTO(projectRepository.save(project));
     }
 
-    public int updateProject(Project project) {
+    public int updateProject(ProjectDTO projectDTO) {
+        Project project = convertToEntity(projectDTO);
         return projectRepository.update(project.getName(),
         project.getDescr(), project.getBeginDate(), project.getEndDate(), project.getId());
     }
@@ -61,15 +63,26 @@ public class ProjectService {
 
     public Map<Integer, Integer> getActiveTasksCountByProject() {
         return projectRepository.getActiveTasksCountByProject().stream().collect(Collectors.toMap(
-        ActiveTasksCount::getProjectId,
-        ActiveTasksCount::getActiveTasksCount));
+            ActiveTasksCount::getProjectId,
+            ActiveTasksCount::getActiveTasksCount
+        ));
     }
 
     private ProjectDTO convertToDTO(Project project) {
-        return ProjectDTO.builder().id(project.getId())
+        return ProjectDTO.builder()
+            .id(project.getId())
             .name(project.getName())
             .descr(project.getDescr())
             .beginDate(project.getBeginDate())
             .endDate(project.getEndDate()).build();
+    }
+
+    private Project convertToEntity(ProjectDTO projectDTO) {
+        return Project.builder()
+            .id(projectDTO.getId())
+            .name(projectDTO.getName())
+            .descr(projectDTO.getDescr())
+            .beginDate(projectDTO.getBeginDate())
+            .endDate(projectDTO.getEndDate()).build();
     }
 }

@@ -22,7 +22,8 @@ public class TaskService {
         return taskRepository.findByProjectId(projectId).stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-    public TaskDTO save(Task task) {
+    public TaskDTO save(TaskDTO taskDTO) {
+        Task task = convertToEntity(taskDTO);
         try {
             return convertToDTO(taskRepository.save(task));
         } catch(DataIntegrityViolationException e) {
@@ -40,7 +41,8 @@ public class TaskService {
         taskRepository.deleteByIdAndProjectId(taskId, projectId);
     }
 
-    public TaskDTO updateTask(int projectId, int taskId, Task task) {
+    public TaskDTO updateTask(int projectId, int taskId, TaskDTO taskDTO) {
+        Task task = convertToEntity(taskDTO);
         Optional<Task> foundTask = taskRepository.findByIdAndProjectId(taskId, projectId);
         if(foundTask.isPresent()) {
             task.setId(taskId);
@@ -55,6 +57,16 @@ public class TaskService {
 
     private TaskDTO convertToDTO(Task task) {
         return TaskDTO.builder()
+            .id(task.getId())
+            .name(task.getName())
+            .descr(task.getDescr())
+            .projectId(task.getProjectId())
+            .endDate(task.getEndDate())
+            .completed(task.isCompleted()).build();
+    }
+
+    private Task convertToEntity(TaskDTO task) {
+        return Task.builder()
             .id(task.getId())
             .name(task.getName())
             .descr(task.getDescr())

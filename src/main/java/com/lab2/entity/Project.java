@@ -18,6 +18,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.Builder;
 import lombok.Data;
 
 import com.lab2.dto.ActiveTasksCount;
@@ -58,6 +59,7 @@ import com.lab2.dto.ActiveTasksCount;
     )
 )
 @Data
+@Builder
 public class Project {
     @Id
     @Column(name = "p_id", nullable = false)
